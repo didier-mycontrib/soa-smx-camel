@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:camel="http://camel.apache.org/schema/spring"
+xmlns:camel-cxf="http://camel.apache.org/schema/cxf" 
+xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://camel.apache.org/schema/spring	http://camel.apache.org/schema/spring/camel-spring-2.13.2.xsd
+http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+	
+		<!-- lancement possible via mvn camel:run -->
+	
+	<bean id="processorConsumingCxfPOJO" class="tp.camel.bean.ProcessorConsumingCxfPOJO"/>
+	
+	<!-- dataFormat of cxfEndpoint :
+	    MESSAGE  : soap envelope (as xml stream or ...) via http transport ou ... 
+	    POJO  (by default)   : parametres de l'appel de methode (as org.apache.cxf.message.MessageContentsList)
+	    PAYLOAD   : contenu interne de la partie du body soap (de type org.apache.camel.component.cxf.CxfPayload)
+	                methode et ses parametres (nom/valeur xml ou ...)
+	    -->
+	
+	<!-- cxfEndpoint (soap) define by serviceClass=SEI 
+	     address="http://localhost:8081/Calculateur"-->
+	<camel-cxf:cxfEndpoint id="EsbCalculateurPort"
+                   address="http://localhost:8081/Calculateur"
+                   serviceClass="tp.service.Calculateur"                             
+                  >
+                 
+                   <camel-cxf:properties>                
+					<entry key="dataFormat" value="POJO"/> 
+					<entry key="setDefaultBus" value="false"/> 									
+				 </camel-cxf:properties>   
+	</camel-cxf:cxfEndpoint>			 
+	<bean id="pojoCalculateurImplServiceBean" class="tp.service.CalculateurImplV2"/>
+   
+	
+	<camelContext id="camel-ctx-1" xmlns="http://camel.apache.org/schema/spring">
+	
+	
+	<route>
+		<from uri="direct:log_body" />
+		<log message="log:camel body (of className=${body.class.name}) : ${body}" />
+	</route>
+	
+	
+	
+	 <route >
+	  
+	 <from uri="cxf:bean:EsbCalculateurPort" /> <!-- in POJO Mode -->
+	 <bean ref="processorConsumingCxfPOJO"  />
+	 
+         
+	 </route>	
+	
+	</camelContext>
+</beans>

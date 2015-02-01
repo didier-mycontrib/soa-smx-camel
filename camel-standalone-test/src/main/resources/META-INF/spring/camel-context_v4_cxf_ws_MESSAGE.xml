@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:camel="http://camel.apache.org/schema/spring"
+xmlns:camel-cxf="http://camel.apache.org/schema/cxf" 
+xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://camel.apache.org/schema/spring	http://camel.apache.org/schema/spring/camel-spring-2.13.2.xsd
+http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+	
+		<!-- lancement possible via mvn camel:run -->
+	
+	<bean id = "roundRobinRef" class="org.apache.camel.processor.loadbalancer.RoundRobinLoadBalancer" />
+	
+	
+    <bean id="calculatorWsImplBean" class="tp.service.CalculateurImpl" />
+    <bean id="calculatorWsImplBeanV2" class="tp.service.CalculateurImplV2" />
+   
+	
+	<!-- dataFormat of cxfEndpoint :
+	    MESSAGE  : soap envelope (as xml stream or ...) via http transport ou ... 
+	    POJO  (by default)   : parametres de l'appel de methode (as org.apache.cxf.message.MessageContentsList)
+	    PAYLOAD   : contenu interne de la partie du body soap (de type org.apache.camel.component.cxf.CxfPayload)
+	                methode et ses parametres (nom/valeur xml ou ...)
+	    -->
+	
+	<!-- cxfEndpoint (soap) define by serviceClass=SEI 
+	     address="http://localhost:8081/Calculateur"-->
+	<camel-cxf:cxfEndpoint id="EsbCalculateurPort"
+                   address="http://localhost:8081/Calculateur"
+                   serviceClass="tp.service.Calculateur"                             
+                  >
+                 
+                   <camel-cxf:properties>                
+					<entry key="dataFormat" value="MESSAGE"/> 
+					<entry key="setDefaultBus" value="false"/> 									
+				 </camel-cxf:properties>
+				
+    </camel-cxf:cxfEndpoint>  
+    
+    
+   
+	
+	<camelContext id="camel-ctx-1" xmlns="http://camel.apache.org/schema/spring">
+	
+	
+	<route>
+		<from uri="direct:log_body" />
+		<log message="log:camel body (of className=${body.class.name}) : ${body}" />
+	</route>
+	
+	<route>
+		<from uri="direct:external_ws_tomcat" />
+		<camel:removeHeaders pattern="CamelHttp*"></camel:removeHeaders>
+		<to uri="http://localhost:8080/wsCalculateur/services/calculateur?bridgeEndpoint=true"/>
+		<!-- with option ?bridgeEndpoint=true -->
+	</route>
+	 
+	 
+	 <!-- <convertBodyTo type="java.lang.String" /> to avoid EOF exception as end of expected stream 
+	      if  <wireTap uri="direct:log_body" /> or <log message="log:camel body (of className=${body.class.name}) : ${body}" /> 
+	      between
+	      <from uri="cxf:bean:EsbCalculateurPort" />
+	      and
+	        <to uri="cxfbean:calculatorWsImplBean" /> -->
+	 
+	 <route >
+	  
+	 <from uri="cxf:bean:EsbCalculateurPort" /> 
+	  <!--  
+	  <convertBodyTo type="java.lang.String"/>    
+	  <wireTap uri="direct:log_body" />	 
+	  --> 
+	 <!-- <to uri="cxfbean:calculatorWsImplBean" /> -->
+	    <!-- implementation WS (sans address dans ?wsdl automatique )
+	                                                   cxfbean:... ne semble bien fonctionner qu avec une entree de type 
+	                                                   dataFormat=MESSAGE (enveloppe soap complete)-->
+	 
+	  		 <loadBalance ref="roundRobinRef">
+                <to uri="cxfbean:calculatorWsImplBean" />
+                <to uri="cxfbean:calculatorWsImplBeanV2" />
+               <!--  <to uri="direct:external_ws_tomcat" /> -->
+            </loadBalance>
+         
+	 </route>	
+	
+	</camelContext>
+</beans>

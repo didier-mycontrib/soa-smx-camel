@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:camel="http://camel.apache.org/schema/spring" 
+xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://camel.apache.org/schema/spring	http://camel.apache.org/schema/spring/camel-spring-2.13.2.xsd">
+	
+	
+	<bean id="processByBeanZz" class="tp.camel.bean.ProcessorBeanZz" />
+	
+	<!-- lancement possible via mvn camel:run -->
+	
+	<camelContext id="camel-ctx-1" xmlns="http://camel.apache.org/schema/spring">
+	
+	 <endpoint id="dossierIn" uri="file:data/inXml"></endpoint>
+	 <endpoint id="dossierOutJson" uri="file:data/outJson"></endpoint>
+	 
+	 <dataFormats>
+        <json id="json_Demande" library="Jackson" unmarshalTypeName="tp.data.Demande"/> <!-- for unmarshal -->
+        <json id="json_by_jackson" library="Jackson" />
+	</dataFormats>
+	 
+	 <route>
+	  <from ref="dossierIn" />
+	  <!-- <bean ref="processByBeanZz" method="processBody" /> -->
+	  <log message="data as xml: ${body}"/>
+	  <unmarshal> <jaxb contextPath="tp.data"/>	</unmarshal> <!-- conversion xml vers pojo -->
+	  <log message="pojo/demande with id=${body.id} and type=${body.type}"/>
+	  <marshal ref="json_by_jackson"/> <!-- conversion pojo vers json -->
+	  <log message="data as json: ${body}"/>
+	  <setHeader headerName="CamelFileName"><simple>${file:name.noext}.json</simple></setHeader> <!-- .xml to .json -->
+	  <to ref="dossierOutJson"/>
+	 </route>	
+	 
+	</camelContext>
+</beans>

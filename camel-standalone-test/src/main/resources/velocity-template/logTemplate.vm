@@ -1,0 +1,3 @@
+** exchangeName : $body.exchangeName
+** messageName : $body.messageName
+** messageContent : $body.messageContent

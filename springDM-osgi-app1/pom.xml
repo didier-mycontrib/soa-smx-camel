@@ -1,0 +1,75 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <!-- 
+   <parent>
+    <groupId>tp</groupId>
+    <artifactId>org-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  -->
+  <groupId>tp</groupId>
+  <artifactId>springDM-osgi-app1</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  
+   <packaging>bundle</packaging> 
+  
+  
+   <dependencies>
+     <!-- 
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-ws-metadata_2.0_spec</artifactId>
+            <version>1.1.3</version>
+        </dependency>
+      
+        <dependency>
+            <groupId>org.apache.servicemix</groupId>
+            <artifactId>servicemix-utils</artifactId>
+             <version>1.6.0</version>
+        </dependency>
+        -->
+             
+    </dependencies>
+    
+  <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+				<extensions>true</extensions> <!-- important pour nouveau packaging=bundle -->
+                <version>2.5.3</version> <!-- 2.3.7 -->
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Description>${project.description}</Bundle-Description>
+                        <Import-Package>
+                            javax.jws,
+                            javax.xml.ws,
+                            javax.wsdl,
+                            javax.xml.namespace,                            
+                            org.springframework.beans.factory.config
+                        </Import-Package>
+                        <!-- org.apache.servicemix.util, not imported -->
+                        <Private-Package>
+                        tp.service,
+                        std
+                        </Private-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+            
+             <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<!-- <version>2.5.1</version> -->
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+  		</plugins>
+  	
+  	</build>
+  	  	
+</project>
+  

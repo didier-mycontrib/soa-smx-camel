@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+META-INF/spring/*.xml for Spring DM (Dynamic Module) for OSGi
+OSGI-INF/blueprint/*.xml  for blueprint (standardized version of Spring DM in OSGi R4.2)
+Aries est un projet apache de type implementation du container blueprint osgi
+-->
+
+<!-- 
+features:install webconsole
+http://localhost:8181/system/console  smx/smx
+ -->
+
+
+
+<!--   xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0" 
+   
+    xmlns:jaxrs="http://cxf.apache.org/blueprint/jaxrs"  
+    
+    http://cxf.apache.org/blueprint/jaxrs http://cxf.apache.org/schemas/blueprint/jaxrs.xsd
+
+http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
+    -->
+    
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0" 
+    xmlns:cxf="http://cxf.apache.org/blueprint/core"
+    xmlns:camel-cxf="http://camel.apache.org/schema/blueprint/cxf"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:jaxws="http://cxf.apache.org/blueprint/jaxws"
+    xsi:schemaLocation="
+http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+http://cxf.apache.org/blueprint/jaxws http://cxf.apache.org/schemas/blueprint/jaxws.xsd
+http://cxf.apache.org/blueprint/core http://cxf.apache.org/schemas/blueprint/core.xsd
+http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+    <!-- <cm:property-placeholder persistent-id="xyz"
+        update-strategy="reload">
+    </cm:property-placeholder> 
+-->
+    <cxf:bus id="calculateurServiceBus">
+    </cxf:bus>
+    
+    
+    <bean id="calculateurImpl" class="tp.service.CalculateurImpl" />
+    
+    
+     <jaxws:endpoint id="calculateurEndpoint"            
+                    implementor="#calculateurImpl"
+                    address="/wsCalculateurBlueprint">
+     </jaxws:endpoint>
+ <!-- 
+    <jaxws:endpoint id="calculateurEndpoint"
+                    xmlns:s="http://service.tp/"
+                    serviceName="s:CalculateurImplService"   
+                    endpointName="s:CalculateurImplPort"
+                    implementor="#calculateurImpl"
+                    publishedEndpointUrl="http://localhost:8181/cxf/wsCalculateurBlueprint"                    
+                    address="/wsCalculateurBlueprint"/>
+ -->
+      
+                   
+     <!-- url in smx 4.4.2 :
+      http://localhost:8181/cxf et
+     http://localhost:8181/cxf/wsCalculateurBlueprint?wsdl -->
+
+</blueprint>
+

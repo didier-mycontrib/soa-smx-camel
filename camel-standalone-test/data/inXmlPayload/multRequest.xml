@@ -1,0 +1,4 @@
+<ser:multiplication xmlns:ser="http://service.tp/">
+         <a>8</a>
+         <b>9</b>
+</ser:multiplication>

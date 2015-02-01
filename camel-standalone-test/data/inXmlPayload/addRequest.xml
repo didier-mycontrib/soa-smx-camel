@@ -1,0 +1,4 @@
+<ser:addition xmlns:ser="http://service.tp/">
+       <a>2</a>
+       <b>3</b>
+</ser:addition>

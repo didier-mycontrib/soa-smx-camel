@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:camel="http://camel.apache.org/schema/spring" 
+xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://camel.apache.org/schema/spring	http://camel.apache.org/schema/spring/camel-spring-2.13.2.xsd">
+	
+	
+	<bean id="processByBeanZz" class="tp.camel.bean.ProcessorBeanZz" />
+	
+	<bean id="activemq" 
+	class="org.apache.activemq.camel.component.ActiveMQComponent">
+		<property name="brokerURL" value="tcp://localhost:61616"/>
+	</bean>
+	
+	<!-- lancement possible via mvn camel:run -->
+	
+	<camelContext id="camel-ctx-1" xmlns="http://camel.apache.org/schema/spring">
+	
+	 <endpoint id="dossierIn" uri="file:data/inXml"></endpoint>
+	 <endpoint id="dossierOutXml" uri="file:data/outXml"></endpoint>
+	
+	 
+	 <route >
+	  <from ref="dossierIn" />
+	  <!-- <bean ref="processByBeanZz" method="processBody" /> -->
+	  <log message="xml data from file (of className=${body.class.name}) : ${body}"/>
+	  <to uri="xslt:xsl/demande_order.xslt" />
+	  <log message="data converted by xslt (of className=${body.class.name}) : ${body}"/>
+	  <!--  <to ref="dossierOutXml"/> -->
+	  <!-- <to uri="activemq:queue:queue.A" /> -->
+	  <setProperty propertyName="order_id" xmlns:std="http://standard/"><xpath>/std:order/std:id/text()</xpath> </setProperty>
+	   <setHeader headerName="subject"><simple>res xslt ${property[order_id]}</simple></setHeader>
+	  <setHeader headerName="from"><constant>senderXy@xy.com</constant></setHeader>
+	  <setHeader headerName="to"><simple>user${property[order_id]}@localhost</simple></setHeader>
+	  <to uri="smtp://localhost:25?username=root&amp;password=root"/>
+	 </route>	
+	 
+	</camelContext>
+</beans>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:camel="http://camel.apache.org/schema/spring" 
+xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://camel.apache.org/schema/spring	http://camel.apache.org/schema/spring/camel-spring-2.13.2.xsd">
+	
+	<bean id="processByBeanXy" class="tp.camel.bean.ProcessorBeanXy" />
+	<bean id="processByBeanXy2" class="tp.camel.bean.ProcessorBeanXyV2"/>
+	
+	<bean id="processByBeanZz" class="tp.camel.bean.ProcessorBeanZz" />
+	
+	<!-- lancement possible via mvn camel:run -->
+	
+	<camelContext id="camel-ctx-1" xmlns="http://camel.apache.org/schema/spring">
+	
+	 <endpoint id="dossierIn" uri="file:data/in"></endpoint>
+	 <endpoint id="dossierOutA" uri="file:data/outA"></endpoint>
+	 <endpoint id="dossierOutB" uri="file:data/outB"></endpoint>
+	 <endpoint id="dossierOutDefault" uri="file:data/outDefault"></endpoint>
+	 
+	 <route>
+	  <from uri="file:data/in" />  <!--  ou bien <from ref="dossierIn" /> -->
+	  <bean ref="processByBeanXy2" />
+	  <bean ref="processByBeanZz" method="processBody" />
+	  <choice   xmlns:tp="http://data.tp/">
+	   <when>
+	     <xpath>/tp:demande/tp:type = 'A'</xpath>
+	     <to ref="dossierOutA">
+	    </to></when>
+	    <when>
+	     <xpath>/tp:demande/tp:type = 'B'</xpath>
+	     <to ref="dossierOutB">
+	    </to></when>
+	    <otherwise>
+	     <to ref="dossierOutDefault">
+	    </to></otherwise>
+	   </choice>
+	 </route>	
+	 
+	</camelContext>
+</beans>

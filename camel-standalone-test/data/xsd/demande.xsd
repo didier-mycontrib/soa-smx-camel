@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+xmlns:tns="http://data.tp/"
+ targetNamespace="http://data.tp/"
+ elementFormDefault="qualified"
+ attributeFormDefault="unqualified">
+ 
+ 
+ <xsd:element name="demande" type="tns:Demande"/>
+ 
+    <xsd:complexType name="Demande">
+    	<xsd:sequence>
+    		<xsd:element name="id" type="xsd:int"/>
+    		<xsd:element name="type" type="xsd:string"/>
+    	</xsd:sequence>
+    </xsd:complexType>
+
+    
+</xsd:schema>

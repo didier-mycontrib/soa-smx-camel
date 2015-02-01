@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:camel="http://camel.apache.org/schema/spring"
+xmlns:camel-cxf="http://camel.apache.org/schema/cxf" 
+xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://camel.apache.org/schema/spring	http://camel.apache.org/schema/spring/camel-spring-2.13.2.xsd
+http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+	
+		<!-- lancement possible via mvn camel:run ou via StandaloneCamelSpringTestApp/main-->
+	
+	<!-- this processor send string data to direct:startInOnly -->
+  <bean id="processorInteractiveInOnlyDirectRouteStarter" class="tp.camel.bean.ProcessorInteractiveInOnlyDirectRouteStarter" />	
+  
+  <!-- this processor send string data to direct:startInOut and is waiting for a string response -->
+  <bean id="processorInteractiveInOutDirectRouteStarter" class="tp.camel.bean.ProcessorInteractiveInOutDirectRouteStarter" />
+				
+  <bean id="helloWorldBean" class="tp.camel.bean.HelloWorldBean"/> 
+    
+   
+ 
+	
+	<camelContext id="camel-ctx-1" xmlns="http://camel.apache.org/schema/spring" >
+	 
+	 <!-- 
+	  <route id="start-InOnly">
+	 	<from uri="bean:processorInteractiveInOnlyDirectRouteStarter"  />
+	 	<log message="direct:startInOnly with body = ${body}"/>
+	 </route>
+	 -->
+	 
+	 
+	 
+	   <route id="start-InOut">
+	 	<from uri="bean:processorInteractiveInOutDirectRouteStarter"  />
+	 	<log message="direct:startInOut with body = ${body}"/>
+	 </route>
+	
+	
+	 <route id="my-inOnly-route">
+	 	<from uri="direct:startInOnly" />
+	 	<transform>
+      		<simple>${in.body} extra data!</simple>
+    	</transform>
+	 	<to uri="bean:helloWorldBean?method=sayHelloInOnly"  />
+	 </route>
+	 
+	  <route id="my-inOut-route">
+	 	<from uri="direct:startInOut" />
+	 	<to uri="bean:helloWorldBean?method=sayHelloInOut"  />
+	 </route>	
+	
+	</camelContext>
+</beans>

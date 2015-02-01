@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:camel="http://camel.apache.org/schema/spring"
+xmlns:camel-cxf="http://camel.apache.org/schema/cxf" 
+xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://camel.apache.org/schema/spring	http://camel.apache.org/schema/spring/camel-spring-2.13.2.xsd
+http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+	
+	
+	<!-- bean implementing logic -->
+  <bean id="remoteCalculateurImplServiceBean" class="tp.rmi.service.RemoteCalculateurImpl"/>
+
+  <!-- setup RMI server -->
+  <bean id="rmiServer" class="java.rmi.registry.LocateRegistry" factory-method="createRegistry">
+    <constructor-arg index="0" value="12345"/>
+  </bean>
+
+  <camelContext xmlns="http://camel.apache.org/schema/spring" depends-on="rmiServer">
+
+    <endpoint id="rmiService" uri="rmi://localhost:12345/remoteCalculateurServiceBean?remoteInterfaces=tp.rmi.service.RemoteCalculateur"/>
+
+    <!-- expose a RMI service as a Camel route -->
+    <camel:route>
+      <from ref="rmiService"/>
+      <to uri="log:Incoming request on RMI"/> <!-- of type BeanInvocation(Method method, Object[] args)
+                                                  with .invoke(Object pojoServiceBean, Exchange exchange) using reflection -->
+      <to uri="bean:remoteCalculateurImplServiceBean"/>
+    </camel:route>
+
+  </camelContext>
+	
+</beans>

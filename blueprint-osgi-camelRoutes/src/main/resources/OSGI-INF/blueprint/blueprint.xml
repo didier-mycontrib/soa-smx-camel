@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+ 
+ <!--
+  features:install camel-http
+   features:install camel-mail (for smtp)
+ 
+   xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0" 
+   
+    xmlns:jaxrs="http://cxf.apache.org/blueprint/jaxrs"  
+    
+    http://cxf.apache.org/blueprint/jaxrs http://cxf.apache.org/schemas/blueprint/jaxrs.xsd
+
+http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
+    -->
+    
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0" 
+    xmlns:cxf="http://cxf.apache.org/blueprint/core"
+    xmlns:camel-cxf="http://camel.apache.org/schema/blueprint/cxf"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:jaxws="http://cxf.apache.org/blueprint/jaxws"
+    xsi:schemaLocation="
+http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+http://cxf.apache.org/blueprint/jaxws http://cxf.apache.org/schemas/blueprint/jaxws.xsd
+http://cxf.apache.org/blueprint/core http://cxf.apache.org/schemas/blueprint/core.xsd
+http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+    <!-- <cm:property-placeholder persistent-id="xyz"
+        update-strategy="reload">
+    </cm:property-placeholder> 
+-->
+      
+ 
+    <!-- serviceClass="interface SEI"  serviceClass="tp.service.Calculateur" utile seulement pour dataFormat=POJO 
+         attention : si endpoint de type point d'entree sur ESB alors il faut fournir une url 
+         de type "/camelCalculator" qui sera relative a "http://localhost:8181/cxf" 
+         et surtout pas d'url absolue en "http" -->
+  
+    <camel-cxf:cxfEndpoint id="EsbCalculateurPort"
+                   address="/camelStdCalculator"
+                   endpointName="std:StdCalculateurPortEsb"
+                   serviceName="std:StdCalculateurService"                  
+                   wsdlURL="StdCalculateur.wsdl"                 
+                   xmlns:std="http://standard/"
+                  >
+                   <camel-cxf:properties>
+					<entry key="dataFormat" value="MESSAGE"/> <!-- POJO , MESSAGE , PAYLOAD -->
+					<entry key="setDefaultBus" value="false"/> 									
+				 </camel-cxf:properties>
+    </camel-cxf:cxfEndpoint>                   
+             
+     
+      
+    
+    <camelContext xmlns="http://camel.apache.org/schema/blueprint">
+    
+
+      <!-- 
+        <route>
+            <from uri="timer:test" />  
+            <wireTap uri="log:tap"/>
+            <to uri="log:test" />
+        </route>               
+        -->
+    
+     <route>
+            <from uri="cxf:bean:EsbCalculateurPort" />                            
+             <convertBodyTo type="java.lang.String"/>    
+             <to uri="xslt:std_to_from_basic.xslt" />         
+             <wireTap uri="file://target/outbox/" /> <!-- a peaufiner: extension a controller ? -->             
+             <!-- <wireTap uri="log:calculateurTap"/> --> <!-- send copy in smx/data/log/servicemix.log --> 
+             <to  uri="log:calculateurTapInputAfterXslt" />        
+            
+             <to uri="http://localhost:8181/cxf/wsCalculateurBlueprint?bridgeEndpoint=true"/>  <!-- vers version Blueprint -->
+            <!-- <to uri="http://localhost:8181/cxf/wsCalculateurSpringDM?bridgeEndpoint=true"/> --><!-- vers version SpringDM -->
+            <!-- <to uri="http://localhost:8080/wsCalculateur/services/calculateur?bridgeEndpoint=true"/>  --><!-- vers version Tomcat --> 
+            
+             <convertBodyTo type="java.lang.String"/>
+            <to  uri="log:calculateurTapResponse" />   <!-- automatic wireTap = effect of InOut / InOnly MEP --> 
+           
+            <!--  <wireTap uri="activemq:queue:queue.A" /> --> <!-- ok when ActiveMq started -->
+            <!--  <wireTap uri="smtp://localhost:25?to=user1@localhost" /> --> <!-- ok when james smtp started -->
+             <to uri="xslt:std_to_from_basic.xslt" />
+     </route>
+     
+      <!--  <to  uri="jms:queue:queue.A" /> need some configuration
+             <to  uri="activemq:queue:queue.A" /> use local activeMq broker by default -->
+          
+       
+  </camelContext>
+
+	
+</blueprint>
+
