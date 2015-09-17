@@ -1,76 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns:camel="http://camel.apache.org/schema/spring"
-xmlns:camel-cxf="http://camel.apache.org/schema/cxf" 
+xmlns:camel="http://camel.apache.org/schema/spring" 
 xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
-http://camel.apache.org/schema/spring	http://camel.apache.org/schema/spring/camel-spring-2.13.2.xsd
-http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+http://camel.apache.org/schema/spring	http://camel.apache.org/schema/spring/camel-spring-2.13.2.xsd">
 	
-		<!-- lancement possible via mvn camel:run -->
 	
-	<bean id="processorConsumingCxfXmlPayload" class="tp.camel.bean.ProcessorConsumingCxfXmlPayload"/>
 	
-	<!-- dataFormat of cxfEndpoint :
-	    MESSAGE  : soap envelope (as xml stream or ...) via http transport ou ... 
-	    POJO  (by default)   : parametres de l'appel de methode (as org.apache.cxf.message.MessageContentsList)
-	    PAYLOAD   : contenu interne de la partie du body soap (de type org.apache.camel.component.cxf.CxfPayload)
-	                methode et ses parametres (nom/valeur xml ou ...)
-	    -->
+	<!-- lancement possible via mvn camel:run -->
 	
-	<camel-cxf:cxfEndpoint id="ExternalCalculateurPort"
-                   address="http://localhost:8080/wsCalculateur/services/calculateur"
-                   serviceClass="tp.service.Calculateur"
-					endpointName="ns:CalculateurImplPort"
-					serviceName="ns:CalculateurImplService"
-					wsdlURL="wsdl/externalCalculateurService.wsdl"
-					xmlns:ns="http://service.tp/"                          
-                  >
-                   <camel-cxf:properties>                
-					<entry key="dataFormat" value="PAYLOAD"/> 
-					<entry key="setDefaultBus" value="false"/> 									
-				 </camel-cxf:properties>   
-	</camel-cxf:cxfEndpoint>
-				
-    
-    <!-- tracer bean used if  trace="true" in camelContext -->	
-<bean id="camelTracer" class="org.apache.camel.processor.interceptor.Tracer">
-    <property name="traceExceptions" value="false"/>
-    <property name="traceInterceptors" value="true"/>
-    <property name="logLevel" value="INFO"/> 
-    <property name="logName" value="tp"/>
-    <property name="traceOutExchanges" value="true" />
-</bean>	
-
-<bean id="traceFormatter" class="org.apache.camel.processor.interceptor.DefaultTraceFormatter">
-  <property name="showOutBody" value="true" />
-  <property name="showOutBodyType" value="true" />
-</bean>
-   
+	<camelContext id="camelContext" xmlns="http://camel.apache.org/schema/spring">
 	
-	<camelContext id="camel-ctx-1" xmlns="http://camel.apache.org/schema/spring" trace="true">
-
-	
-	 <route >
-	 <from uri="file:data/inXmlPayload" />
-	 <choice>
-			<when>
-				<xpath>contains(name(/*),':')</xpath>
-				 <setHeader headerName="operationName">
-				    <xpath resultType="java.lang.String">substring-after(name(/*),':')</xpath> 
-	  			</setHeader> 
-			</when>
-			<otherwise>
-				<setHeader headerName="operationName">
-	       			<xpath resultType="java.lang.String">name(/*)</xpath> 
-	  			</setHeader> 
-			</otherwise>
-	 </choice> 
-	 <to uri="cxf:bean:ExternalCalculateurPort" /> <!-- in PAYLOAD Mode -->
-	  <setHeader headerName="CamelFileName"><simple>${file:name.noext}Response.xml</simple></setHeader> 
-	 <to uri="file:data/outXmlPayload" />
-         
-	 </route>	
-	
+	  <packageScan>
+            <package>tp.camel.route</package>
+            <!-- this package contains "Camel DSL RouteBuilder configurations" 
+            (portable "Spring" , "spring-DM" , OSGI-bluePrint") -->
+        </packageScan>
+	 
 	</camelContext>
 </beans>

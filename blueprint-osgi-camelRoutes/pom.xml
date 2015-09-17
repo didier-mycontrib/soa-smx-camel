@@ -16,6 +16,8 @@
   <packaging>bundle</packaging>  <!-- VERY IMPORTANT (instead of packaging="jar") -->
   
     <dependencies>
+    
+    
     <!-- 
        <dependency>
 			<groupId>org.osgi</groupId>

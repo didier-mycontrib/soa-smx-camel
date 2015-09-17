@@ -11,7 +11,8 @@ public class StandaloneJavaCamelTestApp {
 		try {
 			camelContext.addRoutes(new /* inner anonymous class which implements */ RouteBuilder() {
 			    public void configure() {
-			        from("file:data/in").to("file:data/outDefault"); // Camel DSL Syntax
+			        from("file:data/in")
+			        .to("file:data/outDefault"); // Camel DSL Syntax
 			    }
 			});
 			camelContext.start();

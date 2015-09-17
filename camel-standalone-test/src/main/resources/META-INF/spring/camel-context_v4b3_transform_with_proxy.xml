@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:camel="http://camel.apache.org/schema/spring"
+xmlns:camel-cxf="http://camel.apache.org/schema/cxf" 
+xsi:schemaLocation="http://www.springframework.org/schema/beans  http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+http://camel.apache.org/schema/spring	http://camel.apache.org/schema/spring/camel-spring-2.13.2.xsd
+http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+	
+		<!-- lancement possible via mvn camel:run -->
+	
+	<bean id="processorCxfPojoToBeanInvocation" class="tp.camel.bean.ProcessorCxfPojoToBeanInvocation"/>
+
+	
+	<!-- dataFormat of cxfEndpoint :
+	    MESSAGE  : soap envelope (as xml stream or ...) via http transport ou ... 
+	    POJO  (by default)   : parametres de l'appel de methode (as org.apache.cxf.message.MessageContentsList)
+	    PAYLOAD   : contenu interne de la partie du body soap (de type org.apache.camel.component.cxf.CxfPayload)
+	                methode et ses parametres (nom/valeur xml ou ...)
+	    -->
+	
+	<!-- cxfEndpoint (soap) define by serviceClass=SEI 
+	     address="http://localhost:8081/StdCalculator"-->
+	<camel-cxf:cxfEndpoint id="EsbStdCalculatorPort"
+                   address="http://localhost:8081/StdCalculator"
+                   serviceClass="std.Calculator"                             
+                  >
+                 
+                   <camel-cxf:properties>                
+					<entry key="dataFormat" value="POJO"/> 
+					<entry key="setDefaultBus" value="false"/> 									
+				 </camel-cxf:properties>
+				
+    </camel-cxf:cxfEndpoint>  
+    
+    
+    <camel-cxf:cxfEndpoint id="ExternalCalculateurPort"
+                   address="http://localhost:8080/wsCalculateur/services/calculateur"
+                   serviceClass="tp.service.Calculateur"
+					endpointName="ns:CalculateurImplPort"
+					serviceName="ns:CalculateurImplService"
+					wsdlURL="wsdl/externalCalculateurService.wsdl"
+					xmlns:ns="http://service.tp/"                          
+                  >
+                   <camel-cxf:properties>                
+					<entry key="dataFormat" value="POJO"/> 
+					<entry key="setDefaultBus" value="false"/> 									
+				 </camel-cxf:properties>   
+	</camel-cxf:cxfEndpoint>
+	
+	<bean id="processorBeanInvocationCallingCxfPojo" class="tp.camel.bean.ProcessorBeanInvocationCallingCxfPojo" >
+      <property name="camelCxfPojoUri" value="cxf:bean:ExternalCalculateurPort" />
+  </bean>
+    
+    
+   
+				
+  <!-- <bean id="pojoCalculatorImplServiceBean" class="std.CalculatorBeanV1"/> -->
+  <bean id="pojoCalculatorImplServiceBean" class="std.CalculatorBean"> 
+  		<property   name="calcProxy" ref="myBasicWsCalculateurProxy" />
+  </bean>
+    
+   
+ 
+	
+	<camelContext id="camel-ctx-1" xmlns="http://camel.apache.org/schema/spring" typeConverterStatisticsEnabled="true">
+	
+	
+	 <!-- create a proxy that will route to the direct:start endpoint when invoked  -->
+    
+    <proxy id="myBasicWsCalculateurProxy"
+           serviceInterface="tp.service.Calculateur"
+           serviceUrl="direct:to_basic_calculator"/>
+	 
+	 
+	<route>
+		<from uri="direct:log_body" />
+		<log message="log:camel body (of className=${body.class.name}) : ${body}" />
+	</route>
+	
+	
+	
+	<route>
+		<from uri="direct:to_basic_calculator" />
+		<to uri="bean:processorBeanInvocationCallingCxfPojo"> <!-- calling external WS -->
+        <description> calling indirectly  camelCxfPojoUri="cxf:bean:ExternalCalculateurPort" 
+                    after converting BeanInvocation in MessageContentsList 
+                    and setting operationName header </description>
+    	</to>
+	</route>
+	
+	 <route>
+	  
+	 <from uri="cxf:bean:EsbStdCalculatorPort" /> <!-- in POJO Mode -->
+	
+	  <setHeader headerName="nextBeanInvocationInterface"><constant>std.Calculator</constant></setHeader>
+	  <convertBodyTo type="org.apache.camel.component.bean.BeanInvocation" >
+	       <description>CxfPojoToBeanInvocationConverter (registered in META-INF/services/org/apache/camel/TypeConverter)
+	                    will be applied to convert from cxf MessageContentsList (pojo mode) to BeanInvocation
+	                    according to "operationName" and "nextBeanInvocationInterface" in headers</description>
+	  </convertBodyTo>
+	  
+	  
+	  <to uri="bean:pojoCalculatorImplServiceBean"/>
+         
+	 </route>	
+	
+	</camelContext>
+</beans>
